@@ -21,7 +21,7 @@ jobs:
     - name: Prepare Configuration
       run: |
         CONFIG_ENV1=$(cat config-op9r.env | grep -w "CONFIG_ENV" | head -n 1 | cut -d "=" -f 2)
-        CONFIG_ENV=$(echo ${{ github.event.inputs.CONFIG_FILE }}).env
+        CONFIG_ENV=${{ github.event.inputs.CONFIG_FILE }}.env
         echo "KERNEL_SOURCE=$(cat $CONFIG_ENV | grep -w "KERNEL_SOURCE" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNEL_SOURCE_BRANCH=$(cat $CONFIG_ENV | grep -w "KERNEL_SOURCE_BRANCH" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
         echo "KERNEL_CONFIG=$(cat $CONFIG_ENV | grep -w "KERNEL_CONFIG" | head -n 1 | cut -d "=" -f 2)" >> $GITHUB_ENV
