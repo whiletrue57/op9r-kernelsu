@@ -7,7 +7,11 @@ on:
         description: 'Select an option'
         required: true
         default: 'config-op9r-meteoric'
-        options: ['config-op9r-meteoric', 'config-op9r', 'other']
+        type: choice
+        options: 
+        - 'config-op9r-meteoric'
+        - 'config-op9r'
+        - 'other'
 
 jobs:
   build:
