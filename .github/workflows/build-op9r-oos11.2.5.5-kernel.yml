@@ -173,9 +173,10 @@ jobs:
           echo "LOCALVERSION=" >> $GITHUB_ENV
           echo "LOCALVERSION=$(cat android-kernel/localversion)" >> $GITHUB_ENV
         fi
+        echo "ENABLE_KERNELSU=${{ github.event.inputs.enable_kernelsu }}" >> $GITHUB_ENV
 
     - name: Setup KernelSU
-      if: ${{ github.event.inputs.enable_kernelsu }} == 'true'
+      if: env.ENABLE_KERNELSU == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         rm -rf KernelSU drivers/kernelsu
