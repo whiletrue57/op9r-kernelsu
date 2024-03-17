@@ -1,0 +1,193 @@
+name: build-op9r-kernel-oos11.2.5.5
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch name'
+        required: true
+        type: choice
+        default: 'oneplus/SM8250_R_11.0_9R'
+        options: 
+        - 'oneplus/SM8250_R_11.0_9R'
+        - 'main'
+        
+      clang_link:
+        description: 'Clang download link'
+        required: true
+        type: choice
+        default: 'https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android11-release/clang-r383902b.tar.gz'
+        options: 
+        - 'https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/android11-release/clang-r383902b.tar.gz'
+
+      gcc_64_link:
+        description: 'Gcc64 download link'
+        required: true
+        type: choice
+        default: 'https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz'
+        options: 
+        - 'https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz'
+
+      gcc_32_link:
+        description: 'Gcc32 download link'
+        required: true
+        type: choice
+        default: 'https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz'
+        options: 
+        - 'https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz'
+
+      boot_link:
+        description: 'Boot download link'
+        required: true
+        type: choice
+        default: 'https://raw.githubusercontent.com/r8ter/bootgitlfs/main/oos11-boot-a.img'
+        options: 
+        - 'https://raw.githubusercontent.com/r8ter/bootgitlfs/main/oos11-boot-a.img'
+
+      enable_kernelsu:
+        description: 'Enable KernelSU'
+        required: true
+        type: choice
+        default: 'false'
+        options: 
+        - 'false'
+        - 'true'
+
+      extra_cmds:
+        description: 'Build Kerel Extra Cmds'
+        required: true
+        default: ' LLVM=1 LLVM_IAS=1 '
+
+      kernel_config:
+        description: 'Kernel Config File'
+        required: true
+        default: 'vendor/kona-perf_defconfig'
+
+      enable_ccache:
+        description: 'Enable CCACHE'
+        required: true
+        type: choice
+        default: 'true'
+        options: 
+        - 'false'
+        - 'true'
+
+      change_kbuild:
+        description: 'Change scripts/Kbuild.include file'
+        required: true
+        type: choice
+        default: 'false'
+        options: 
+        - 'false'
+        - 'true'
+
+jobs:
+  build:
+    name: Build Kernel by ${{ github.actor }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.branch }}
+    - name: use which branch
+      run: |
+        ls -alhF .
+
+    - name: install packages
+      run: |
+        cd $GITHUB_WORKSPACE
+        ls -alhF --color .
+        echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%Y%m%d%H%M")" >> $GITHUB_ENV
+        sudo apt update
+        sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
+        mkdir -p $GITHUB_WORKSPACE/kernel_workspace
+
+    - name: Download Clang-aosp
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        mkdir clang-aosp
+        wget -O clang.tar.gz ${{ github.event.inputs.clang_link }}
+        tar -C clang-aosp/ -zxvf clang.tar.gz
+
+    - name: Download Gcc-aosp
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        mkdir gcc-64
+        wget -O gcc-aarch64.tar.gz ${{ github.event.inputs.gcc_64_link }}
+        tar -C gcc-64/ -zxvf gcc-aarch64.tar.gz
+        echo "GCC_64=CROSS_COMPILE=$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin/aarch64-linux-android-" >> $GITHUB_ENV
+        mkdir gcc-32
+        wget -O gcc-arm.tar.gz ${{ github.event.inputs.gcc_32_link }}
+        tar -C gcc-32/ -zxvf gcc-arm.tar.gz
+        echo "GCC_32=CROSS_COMPILE_ARM32=$GITHUB_WORKSPACE/kernel_workspace/gcc-32/bin/arm-linux-androideabi-" >> $GITHUB_ENV
+
+    - name: Check clang as version
+      run: |
+        which as
+        file $(which as)
+        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-32/bin:$PATH
+        export KBUILD_BUILD_HOST=Github-Action
+        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        which as
+        file $(which as)
+        echo "list all gcc-64 bin"
+        cd $GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin/
+        ls -1p .| sed "s@^@$(pwd)/@"
+        file *as
+        cd $GITHUB_WORKSPACE/kernel_workspace/gcc-32/bin/
+        ls -1p .| sed "s@^@$(pwd)/@"
+        file *as
+
+    - name: Download mkbootimg tools
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        git clone https://android.googlesource.com/platform/system/tools/mkbootimg tools -b master-kernel-build-2022 --depth=1
+
+    - name: Download source boot image
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        wget -O boot-source.img ${{ github.event.inputs.boot_link }}
+        if [ -f boot-source.img ]; then
+            echo "FORMAT_MKBOOTING=$(echo `tools/unpack_bootimg.py --boot_img=boot-source.img --format mkbootimg`)" >> $GITHUB_ENV
+            echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
+        fi
+
+    - name: Setup KernelSU
+      if: ${{ github.event.inputs.enable_kernelsu }} == 'true'
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        rm -rf KernelSU drivers/kernelsu
+        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash
+        KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
+        echo "UPLOADNAME=-KernelSU_$KSU_VERSION" >> $GITHUB_ENV
+
+    - name: Build kernel
+      run: |
+        cd $GITHUB_WORKSPACE/
+        du -hd 2 .
+        df -h .
+        df -h
+        chmod +x -R *
+        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-32/bin:$PATH
+        export KBUILD_BUILD_HOST=Github-Action
+        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        if [ ! -z ${{ env.KSU_EXPECTED_SIZE }} ] && [ ! -z ${{ env.KSU_EXPECTED_HASH }} ]; then
+          export KSU_EXPECTED_SIZE=${{ env.KSU_EXPECTED_SIZE }}
+          export KSU_EXPECTED_HASH=${{ env.KSU_EXPECTED_HASH }}
+        fi
+        echo "make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ github.event.inputs.kernel_config }}"
+        make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ github.event.inputs.kernel_config }}
+        if [ ${{ github.event.inputs.change_kbuild }} = true ]; then
+          ls scripts/Kbuild.include && cp scripts/Kbuild.include scripts/Kbuild.include1
+          sed -i "s/scripts\/basic\/fixdep/chmod +x -R . \&\& scripts\/basic\/fixdep/g" scripts/Kbuild.include
+          diff scripts/Kbuild.include scripts/Kbuild.include1
+        fi
+        if [ ${{ github.event.inputs.enable_ccache }} = true ]; then
+            echo 'make -j$(nproc --all) CC="ccache clang" O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} -B -w -s'
+            make -j$(nproc --all) CC="ccache clang" O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} -B -w -s
+        else
+            echo "make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} -B -w -s"
+            make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} -B -w -s
+        fi
+        ls -alhF --color out/arch/arm64/boot/
