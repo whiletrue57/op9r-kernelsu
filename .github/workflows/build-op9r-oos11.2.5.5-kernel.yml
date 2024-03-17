@@ -155,6 +155,7 @@ jobs:
         git clone ${{ github.event.inputs.kernel_link }} -b ${{ github.event.inputs.kernel_branch }} android-kernel --depth=1
         echo "LOCALVERSION=$(cat android-kernel/localversion)" >> $GITHUB_ENV
         echo "ENABLE_KERNELSU=$(echo ${{ github.event.inputs.enable_kernelsu }}|cut -d "|" -f 1)" >> $GITHUB_ENV
+        echo "enable kernelsu ${{ env.ENABLE_KERNELSU }}"
 
     - name: Setup KernelSU
       if: env.ENABLE_KERNELSU == 'true'
