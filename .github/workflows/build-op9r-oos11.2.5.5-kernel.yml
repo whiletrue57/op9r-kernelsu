@@ -145,12 +145,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ github.event.inputs.kernel_link }} -b ${{ github.event.inputs.kernel_branch }} android-kernel --depth=1
-        if [[ ${{ env.ADD_LOCALVERSION_TO_FILENAME }} == 'true' ]]; then
-          echo "LOCALVERSION=$(cat android-kernel/localversion)" >> $GITHUB_ENV
-        else
-          echo "LOCALVERSION=" >> $GITHUB_ENV
-          echo "LOCALVERSION=$(cat android-kernel/localversion)" >> $GITHUB_ENV
-        fi
+        echo "LOCALVERSION=" >> $GITHUB_ENV
+        echo "LOCALVERSION=$(cat android-kernel/localversion)" >> $GITHUB_ENV
         echo "ENABLE_KERNELSU=$(echo ${{ github.event.inputs.enable_kernelsu }}|cut -d "|" -f 1)" >> $GITHUB_ENV
 
     - name: Setup KernelSU
@@ -172,10 +168,6 @@ jobs:
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-32/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        if [ ! -z ${{ env.KSU_EXPECTED_SIZE }} ] && [ ! -z ${{ env.KSU_EXPECTED_HASH }} ]; then
-          export KSU_EXPECTED_SIZE=${{ env.KSU_EXPECTED_SIZE }}
-          export KSU_EXPECTED_HASH=${{ env.KSU_EXPECTED_HASH }}
-        fi
         cd android-kernel
         echo "make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ github.event.inputs.kernel_config }}"
         make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ github.event.inputs.kernel_config }}
