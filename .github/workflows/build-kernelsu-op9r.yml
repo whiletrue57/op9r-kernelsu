@@ -292,6 +292,9 @@ jobs:
         fi
         echo "make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_CONFIG }}"
         make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_CONFIG }}
+        ls scripts/Kbuild.include && cp scripts/Kbuild.include scripts/Kbuild.include1
+        sed -i "s/scripts\/basic\/fixdep/chmod +x -R . \&\& scripts\/basic\/fixdep/g" scripts/Kbuild.include
+        diff scripts/Kbuild.include scripts/Kbuild.include1
         if [ ${{ env.ENABLE_CCACHE }} = true ]; then
             echo 'make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} -B -w -s'
             make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} -B -w
