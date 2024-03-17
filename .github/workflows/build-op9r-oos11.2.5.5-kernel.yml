@@ -11,6 +11,16 @@ on:
         options: 
         - 'oneplus/SM8250_R_11.0_9R'
         - 'main'
+
+      kernel_link:
+        description: 'Build Kerel Source link'
+        required: true
+        default: 'https://github.com/OnePlusOSS/android_kernel_oneplus_sm8250'
+
+      kernel_branch:
+        description: 'Build Kerel Branch'
+        required: true
+        default: 'oneplus/SM8250_R_11.0_9R'
         
       clang_link:
         description: 'Clang download link'
@@ -153,6 +163,17 @@ jobs:
             echo "HAVE_SOURCE_BOOT_IMAGE=true" >> $GITHUB_ENV
         fi
 
+    - name: Download kernel source
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        git clone ${{ github.event.inputs.boot_link }} -b ${{ github.event.inputs.boot_link }} android-kernel --depth=1
+        if [[ ${{ env.ADD_LOCALVERSION_TO_FILENAME }} == 'true' ]]; then
+          echo "LOCALVERSION=$(cat android-kernel/localversion)" >> $GITHUB_ENV
+        else
+          echo "LOCALVERSION=" >> $GITHUB_ENV
+          echo "LOCALVERSION=$(cat android-kernel/localversion)" >> $GITHUB_ENV
+        fi
+
     - name: Setup KernelSU
       if: ${{ github.event.inputs.enable_kernelsu }} == 'true'
       run: |
@@ -164,7 +185,7 @@ jobs:
 
     - name: Build kernel
       run: |
-        cd $GITHUB_WORKSPACE/
+        cd $GITHUB_WORKSPACE/kernel_workspace
         du -hd 2 .
         df -h .
         df -h
@@ -176,6 +197,7 @@ jobs:
           export KSU_EXPECTED_SIZE=${{ env.KSU_EXPECTED_SIZE }}
           export KSU_EXPECTED_HASH=${{ env.KSU_EXPECTED_HASH }}
         fi
+        cd android-kernel
         echo "make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ github.event.inputs.kernel_config }}"
         make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ github.event.inputs.kernel_config }}
         if [ ${{ github.event.inputs.change_kbuild }} = true ]; then
