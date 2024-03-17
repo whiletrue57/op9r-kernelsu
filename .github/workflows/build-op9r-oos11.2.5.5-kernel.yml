@@ -144,7 +144,7 @@ jobs:
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone ${{ github.event.inputs.boot_link }} -b ${{ github.event.inputs.boot_link }} android-kernel --depth=1
+        git clone ${{ github.event.inputs.kernel_link }} -b ${{ github.event.inputs.kernel_branch }} android-kernel --depth=1
         if [[ ${{ env.ADD_LOCALVERSION_TO_FILENAME }} == 'true' ]]; then
           echo "LOCALVERSION=$(cat android-kernel/localversion)" >> $GITHUB_ENV
         else
