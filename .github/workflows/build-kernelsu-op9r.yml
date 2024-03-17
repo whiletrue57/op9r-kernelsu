@@ -6,9 +6,10 @@ on:
       CONFIG_FILE:
         description: 'Select an option'
         required: true
-        default: 'config-op9r-meteoric'
+        default: 'config-op9r-meteoric-14'
         type: choice
         options: 
+        - 'config-op9r-meteoric-14'
         - 'config-op9r-meteoric'
         - 'config-op9r'
         - 'other'
