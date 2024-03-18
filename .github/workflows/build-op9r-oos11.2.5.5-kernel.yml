@@ -65,9 +65,9 @@ on:
         default: 'vendor/kona-perf_defconfig'
 
       extra_input:
-        description: 'Extra inputs [enable_kernelsu|enable_ccache|change_kbuild]'
+        description: 'Extra inputs [enable_kernelsu,enable_ccache,change_kbuild]'
         required: true
-        default: 'false|true|false'
+        default: 'false,true,false'
 
 jobs:
   build:
@@ -98,6 +98,11 @@ jobs:
         echo "DEVICE_NAME=OnePlus9R" >> $GITHUB_ENV
         echo "KERNEL_IMAGE_NAME=Image" >> $GITHUB_ENV
         echo "KERNEL_CONFIG=${{ github.event.inputs.kernel_config }}" >> $GITHUB_ENV
+        echo "EXTRA_INPUT=${{ github.event.inputs.extra_input }}" >> $GITHUB_ENV
+        EXTRA_INPUT=${{ github.event.inputs.extra_input }}
+        echo "ENABLE_KERNELSU=$(echo $EXTRA_INPUT|cut -d "," -f 1)" >> $GITHUB_ENV
+        echo "ENABLE_CCACHE=$(echo $EXTRA_INPUT|cut -d "," -f 2)" >> $GITHUB_ENV
+        echo "CHANGE_KBUILD=$(echo $EXTRA_INPUT|cut -d "," -f 3)" >> $GITHUB_ENV
 
     - name: Download Clang-aosp
       run: |
@@ -154,13 +159,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone ${{ github.event.inputs.kernel_link }} -b ${{ github.event.inputs.kernel_branch }} android-kernel --depth=1
         echo "LOCALVERSION=$(cat android-kernel/localversion)" >> $GITHUB_ENV
-        echo "ENABLE_KERNELSU=$(echo ${{ github.event.inputs.extra_input }}|cut -d "|" -f 1)" >> $GITHUB_ENV
-        echo "1111111=$(echo ${{ github.event.inputs.extra_input }})"
-        echo "111111=$(echo ${{ github.event.inputs.extra_input }}|cut -d "|" -f 1)"
-        echo "1111111=$(echo ${{ github.event.inputs.extra_input }}|cut -d "|" -f 2)"
-        echo "1111111=$(echo ${{ github.event.inputs.extra_input }}|cut -d "|" -f 3)"
         echo "enable kernelsu ${{ env.ENABLE_KERNELSU }}"
-        echo "${{ env }}"
 
     - name: Setup KernelSU
       if: env.ENABLE_KERNELSU == 'true'
@@ -193,12 +192,12 @@ jobs:
         cd android-kernel
         echo "make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ github.event.inputs.kernel_config }}"
         make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ github.event.inputs.kernel_config }}
-        if [ $(echo ${{ github.event.inputs.extra_input }}|cut -d "|" -f 3) = true ]; then
+        if [ ${{ env.CHANGE_KBUILD }} = true ]; then
           ls scripts/Kbuild.include && cp scripts/Kbuild.include scripts/Kbuild.include1
           sed -i "s/scripts\/basic\/fixdep/chmod +x -R . \&\& scripts\/basic\/fixdep/g" scripts/Kbuild.include
           diff scripts/Kbuild.include scripts/Kbuild.include1
         fi
-        if [ $(echo ${{ github.event.inputs.extra_input }}|cut -d "|" -f 2) = true ]; then
+        if [ ${{ env.ENABLE_CCACHE }} = true ]; then
             echo 'make -j$(nproc --all) CC="ccache clang" O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} -B -w -s'
             make -j$(nproc --all) CC="ccache clang" O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- ${{ github.event.inputs.extra_cmds }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} -B -w -s
         else
