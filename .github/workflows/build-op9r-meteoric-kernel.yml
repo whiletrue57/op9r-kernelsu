@@ -1,4 +1,4 @@
-name: make kernel
+name: build-op9r-meteoric-kernel
 
 on:
   workflow_dispatch:
