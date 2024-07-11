@@ -72,12 +72,12 @@ jobs:
         export ARCH=arm64
         export SUBARCH=arm64
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 )"
-        export KBUILD_BUILD_HOST=zhlhlf-linux
-        export KBUILD_BUILD_USER=zhlhlf  
+        export KBUILD_BUILD_HOST=axin-linux
+        export KBUILD_BUILD_USER=axin  
         
         cat > AnyKernel3.sh <<end
         rm -rf AnyKernel3
-        git clone --depth=1 https://github.com/zhlhlf/AnyKernel3 AnyKernel3
+        git clone --depth=1 https://github.com/r8ter/AnyKernel3 AnyKernel3
         rm -rf AnyKernel3/.git
         mv out/arch/arm64/boot/dtbo.img AnyKernel3/ || echo "没有dtbo.img"
         mv out/arch/arm64/boot/Image AnyKernel3/
@@ -91,7 +91,7 @@ jobs:
         if [ ${{ github.event.inputs.ksu_path_or_KPROBES }} == "0" ] || [ ${{ github.event.inputs.ksu_path_or_KPROBES }} == "1" ] || [ ${{ github.event.inputs.ksu_path_or_KPROBES }} == "4" ];then
         make O=out -j$(nproc --all) CC="ccache clang" CXX="ccache clang++" ARCH=arm64 CROSS_COMPILE=$CLANG_PATH/bin/aarch64-linux-gnu- CROSS_COMPILE_ARM32=$CLANG_PATH/bin/arm-linux-gnueabi- LD=ld.lld ${{ github.event.inputs.KERNEL_DEFCONFIG }}
         echo "----------------------------"
-        sed s/CONFIG_LOCALVERSION=".*"/'CONFIG_LOCALVERSION="-perf-ksu-zhlhlf"'/g out/.config >>.config1
+        sed s/CONFIG_LOCALVERSION=".*"/'CONFIG_LOCALVERSION="-perf-ksu-axin"'/g out/.config >>.config1
         rm -rf out/.config
         mv .config1 out/.config
         make O=out -j$(nproc --all) CC="ccache clang" CXX="ccache clang++" ARCH=arm64 CROSS_COMPILE=$CLANG_PATH/bin/aarch64-linux-gnu- CROSS_COMPILE_ARM32=$CLANG_PATH/bin/arm-linux-gnueabi- LD=ld.lld || exit 2>&1 | tee kernel.log
@@ -104,7 +104,7 @@ jobs:
         rm -rf KernelSU
         make O=out CC="ccache clang" CXX="ccache clang++" ARCH=arm64 CROSS_COMPILE=$CLANG_PATH/bin/aarch64-linux-gnu- CROSS_COMPILE_ARM32=$CLANG_PATH/bin/arm-linux-gnueabi- LD=ld.lld ${{ github.event.inputs.KERNEL_DEFCONFIG }}
         echo "----------------------------"
-        sed s/CONFIG_LOCALVERSION=".*"/'CONFIG_LOCALVERSION="-perf-ksu-zhlhlf"'/g out/.config >>.config1
+        sed s/CONFIG_LOCALVERSION=".*"/'CONFIG_LOCALVERSION="-perf-ksu-axin"'/g out/.config >>.config1
         rm -rf out/.config
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
 
