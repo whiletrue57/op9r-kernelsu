@@ -36,7 +36,7 @@ on:
         default: 'meteoric-OOS11' 
       
       ksu_path_or_KPROBES:
-        description: '[0，1，2，3,  4]->[path-su,kprobes-su,only-path-su,only-kprobes-su,no-su]'
+        description: '[0，1，2，3, 4, 5]->[path-su,kprobes-su,only-path-su,only-kprobes-su,no-su, test]'
         required: true
         default: '2' 
       
@@ -79,19 +79,23 @@ jobs:
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 )"
         export KBUILD_BUILD_HOST=axin-linux
         export KBUILD_BUILD_USER=axin  
+
+        echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%Y%m%d%H%M")" >> $GITHUB_ENV
         
         cat > AnyKernel3.sh <<end
         rm -rf AnyKernel3
         git clone --depth=1 https://github.com/r8ter/AnyKernel3 AnyKernel3
         rm -rf AnyKernel3/.git
-        mv out/arch/arm64/boot/dtbo.img AnyKernel3/ || echo "没有dtbo.img"
-        mv out/arch/arm64/boot/Image AnyKernel3/
-        mv kernel.log AnyKernel3/
+        cp out/arch/arm64/boot/dtbo.img AnyKernel3/ || echo "没有dtbo.img"
+        cp out/arch/arm64/boot/Image AnyKernel3/
+        cp kernel.log AnyKernel3/
         cd AnyKernel3
-        zip -r \$1-\$2-$(TZ=Asia/Shanghai date "+%Y%m%d%H%M").zip *
+        zip -r \$1-\$2-${{ env.BUILD_TIME }}.zip *
         mkdir ../../666 || echo ""
-        cp -r \$1-\$2-$(TZ=Asia/Shanghai date "+%Y%m%d%H%M").zip ../../666
+        cp -r \$1-\$2-${{ env.BUILD_TIME }}.zip ../../666
         end
+
+        cat AnyKernel3.sh
         
         if [ ${{ github.event.inputs.ksu_path_or_KPROBES }} == "0" ] || [ ${{ github.event.inputs.ksu_path_or_KPROBES }} == "1" ] || [ ${{ github.event.inputs.ksu_path_or_KPROBES }} == "4" ];then
         make O=out -j$(nproc --all) CC="ccache clang" CXX="ccache clang++" ARCH=arm64 CROSS_COMPILE=$CLANG_PATH/bin/aarch64-linux-gnu- CROSS_COMPILE_ARM32=$CLANG_PATH/bin/arm-linux-gnueabi- LD=ld.lld ${{ github.event.inputs.KERNEL_DEFCONFIG }}
@@ -135,7 +139,16 @@ jobs:
         echo "----------------------"
         sh AnyKernel3.sh  ${{ github.event.inputs.zip_name }} "ksu"
         fi
+        if [ ${{ github.event.inputs.ksu_path_or_KPROBES }} = '5' ];then
+        echo "not build kernel, only test"
+        sh AnyKernel3.sh  ${{ github.event.inputs.zip_name }} "test-ksu"
+        fi 
         ls -alhF out/arch/arm64/boot/
         ls -alhF ../666/
         ls -alhF ./
 
+    - name: Upload OP9R meteoric KernelSU 
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.inputs.zip_name }}-"ksu"-${{ env.BUILD_TIME }}
+        path: kernel_workspace/666/${{ github.event.inputs.zip_name }}-"ksu"-${{ env.BUILD_TIME }}.zip
