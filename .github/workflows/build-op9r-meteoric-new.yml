@@ -7,12 +7,14 @@ on:
       KERNEL_SOURCE:
         description: 'Kernel Source'
         required: true
-        default: 'https://github.com/Project-Zephyrus/meteoric_kernel'
+        default: 'https://github.com/r8ter/android-kernel'
+        # default: 'https://github.com/Project-Zephyrus/meteoric_kernel'
         
       KERNEL_SOURCE_BRANCH:
         description: 'Branch'
         required: true
-        default: 'meteoric-OOS'
+        default: 'op9r/oos11/meteoric'
+        # default: 'meteoric-OOS'
         
       KERNEL_DEFCONFIG:
         description: 'Defconfig'
@@ -78,7 +80,7 @@ jobs:
         export ARCH=arm64
         export SUBARCH=arm64
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 )"
-        export KBUILD_BUILD_HOST=axin-linux
+        export KBUILD_BUILD_HOST=axin-linux-${{ env.DEVICE }}
         export KBUILD_BUILD_USER=axin  
         
         cat > AnyKernel3.sh <<end
