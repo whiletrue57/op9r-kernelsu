@@ -138,12 +138,12 @@ jobs:
         make O=out -j$(nproc --all) CC="ccache clang" CXX="ccache clang++" ARCH=arm64 CROSS_COMPILE=$CLANG_PATH/bin/aarch64-linux-gnu- CROSS_COMPILE_ARM32=$CLANG_PATH/bin/arm-linux-gnueabi- LD=ld.lld 2>&1 | tee kernel.log               
         echo "----------------------"
         sh AnyKernel3.sh  ${{ github.event.inputs.zip_name }} "ksu"
+        ls -alhF out/arch/arm64/boot/
         fi
         if [ ${{ github.event.inputs.ksu_path_or_KPROBES }} = '5' ];then
         echo "not build kernel, only test"
         sh AnyKernel3.sh  ${{ github.event.inputs.zip_name }} "test-ksu"
         fi 
-        ls -alhF out/arch/arm64/boot/
         ls -alhF ../666/
         ls -alhF ./
 
