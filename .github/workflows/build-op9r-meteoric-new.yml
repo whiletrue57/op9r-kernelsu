@@ -55,6 +55,7 @@ jobs:
     - name: 配置环境
       run: |
         echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%Y%m%d%H%M")" >> $GITHUB_ENV
+        echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%Y%m%d%H%M%S.%3N")" >> $GITHUB_ENV
         echo "DEVICE=$(echo ${{ github.event.inputs.KERNEL_DEFCONFIG }} | sed 's!vendor/!!;s/_defconfig//;s/_user//;s/-perf//')" >> $GITHUB_ENV
         sudo apt-get update
         sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
@@ -79,8 +80,6 @@ jobs:
         export KBUILD_COMPILER_STRING="$(clang --version | head -n 1 )"
         export KBUILD_BUILD_HOST=axin-linux
         export KBUILD_BUILD_USER=axin  
-
-        echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%Y%m%d%H%M")" >> $GITHUB_ENV
         
         cat > AnyKernel3.sh <<end
         rm -rf AnyKernel3
@@ -146,10 +145,9 @@ jobs:
         fi 
         pwd
         ls -alhF ../666/
-        ls -alhF ./
 
     - name: Upload OP9R meteoric KernelSU 
       uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.inputs.zip_name }}-ksu-${{ env.BUILD_TIME }}
-        path: kernel_workspace/666/${{ github.event.inputs.zip_name }}-ksu-${{ env.BUILD_TIME }}.zip
+        path: /home/runner/work/op9r-kernelsu/op9r-kernelsu/666/${{ github.event.inputs.zip_name }}-ksu-${{ env.BUILD_TIME }}.zip
