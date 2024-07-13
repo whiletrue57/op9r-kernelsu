@@ -144,11 +144,12 @@ jobs:
         echo "not build kernel, only test"
         sh AnyKernel3.sh  ${{ github.event.inputs.zip_name }} "test-ksu"
         fi 
+        pwd
         ls -alhF ../666/
         ls -alhF ./
 
     - name: Upload OP9R meteoric KernelSU 
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.inputs.zip_name }}-"ksu"-${{ env.BUILD_TIME }}
-        path: kernel_workspace/666/${{ github.event.inputs.zip_name }}-"ksu"-${{ env.BUILD_TIME }}.zip
+        name: ${{ github.event.inputs.zip_name }}-ksu-${{ env.BUILD_TIME }}
+        path: kernel_workspace/666/${{ github.event.inputs.zip_name }}-ksu-${{ env.BUILD_TIME }}.zip
